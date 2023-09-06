@@ -1,2 +1,0 @@
-# template
-modelo de projeto
