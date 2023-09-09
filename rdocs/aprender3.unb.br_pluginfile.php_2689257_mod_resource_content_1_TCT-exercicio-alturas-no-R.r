@@ -1,11 +1,9 @@
 # altura<-read.fwf('http://www.ufpr.br/~aanjos/TRI/sinape/dados/altura211.dat',
 # widths=c(3,4,rep(1,14)),header=FALSE,dec=',')
 
-library(irtoys)
-library(ltm)
-library(mirt)
+pacman::p_load(irtoys,ltm,mirt,CTT)
 
-altura <- read.fwf(file="c:\\Eduardo\\UnB\\Ensino\\Teoria da Resposta ao Item\\Aulas-Remotas-TCT\\Aula-TCT\\altura211.txt",
+altura <- read.fwf(file="banco/aprender3.unb.br_pluginfile.php_2689255_mod_resource_content_1_altura211.txt",
 widths=c(3,4,1,1,1,1,1,1,1,1,1,1,1,1,1,1),dec=',')
 
 head(altura)
@@ -52,7 +50,6 @@ cronbach.alpha(altura.itens[-1]) # exclui o item 1
 altura.desc$alpha
 
 # Alternativamente, algumas estatisticas podem ser obtidas utilizando o pacote CTT
-library(CTT)
 
 #altura.reliab <- reliability(altura.itens)
 altura.reliab <- itemAnalysis(altura.itens)
