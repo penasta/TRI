@@ -71,3 +71,18 @@ altura.inf <- altura.itens[escore<=escore.inf,]
 altura.sup <- altura.itens[escore>=escore.sup,]
 
 apply(altura.sup,2,sum)/nrow(altura.sup)-apply(altura.inf,2,sum)/nrow(altura.inf)
+
+# ---------------------------------------------------------------------------- #
+source("rdocs/source/packages.R")
+pacman::p_load(skimr)
+skim(altura$altura)
+
+df <- data.frame(statistic=numeric(14), p.value=numeric(14),id=numeric(14))
+for (i in 1:14) {
+  df[i,] <- cor.test(altura[[i+2]],altura$altura)[c("statistic","p.value")]
+}
+df <- round(df,3)
+df$id <- 1:14
+# Todos apresentam correlação positiva com p-valor <0,05; à exceção do item 1.
+
+

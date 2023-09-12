@@ -47,19 +47,147 @@ always_allow_html: yes
   Teoria de Resposta ao Item} \\
 \vskip 1em
 {\Large
-  1º/2023} \\
+  2º/2023} \\
 \vskip 1em
 \vskip 1em
 \end{center}
 
 \newpage
 
-```{r setup, include=T, echo=T}
-
-if (!require("pacman")) install.packages("pacman")
-p_load(tidyverse,irtoys,ltm,mirt,CTT)
+```{r setup, echo=F}
+source("source/packages.R")
+p_load(irtoys,ltm,mirt,CTT,skimr,knitr)
 seed <- 150167636
 
 ```
 
-# 1) 
+# 1) Com base nos coeficientes estudados, você vê algum item que deva ser descartado? Justifique sua resposta.
+
+## Análise qualitativa
+
+Observando o enunciado dos itens, estes aparentam discriminar bem pessoas muito altas de pessoas muito baixas. Outrossim, deve-se verificar se a discriminação é boa em pessoas de média estatura 
+
+## Análise quantitativa
+
+```{r um, include=T, echo=F, warning=F, message=F,cache=T}
+altura <- read.fwf(file="aprender3.unb.br_pluginfile.php_2689255_mod_resource_content_1_altura211.txt",
+widths=c(3,4,1,1,1,1,1,1,1,1,1,1,1,1,1,1),dec=',')
+colnames(altura) <- c("id","altura",paste(c("i"),1:14,sep=""))
+
+```
+
+```{r uma,echo=F}
+summary(altura$altura)
+```
+
+Observando brevemente a variável altura, percebemos que os dados abrangem uma variedade heterogênea de alturas, contendo de pessoas baixas a pessoas altas, passando por pessoas de estatura média. Portanto, é importante analisar os coeficientes específicos dos itens dadas as respostas para descobrir se os itens discriminam bem pessoas de todas as estaturas.
+
+```{r umb,echo=F,warning=F}
+altura.itens <- altura[,3:16] # utilizando apenas as colunas de respostas
+altura.desc <- descript(altura.itens)
+```
+
+### Correlação ponto-bisserial
+
+```{r umac,echo=F}
+altura.desc[["bisCorr"]] # ponto-bisserial
+```
+
+### Correlação bisserial
+
+```{r umad,echo=F}
+altura.desc[["ExBisCorr"]] # bisserial
+```
+
+### Alpha de Cronbach
+
+```{r umae,echo=F}
+altura.desc[["ExBisCorr"]] # bisserial
+
+```
+
+### Correlação de Pearson com a variável *altura*
+
+```{r umaf,echo=F}
+df <- data.frame(statistic=numeric(14), p.value=numeric(14),id=numeric(14))
+for (i in 1:14) {
+  df[i,] <- cor.test(altura[[i+2]],altura$altura)[c("statistic","p.value")]
+}
+df <- round(df,3)
+df$id <- 1:14
+kable(df)
+```
+
+Analisando os coeficientes calculados, nota-se que os valores encontrados entre os coeficientes bisserial e ponto-bisserial apresentam comportamento monótono. Além disso, os valores encontrados para o alpha de Cronbach são altos, indicando que os itens são homogêneos. Por fim, os valores encontrados para a correlação de Pearson entre as respostas e a variável altura são altos, indicando que os itens discriminam bem pessoas de todas as estaturas. Portanto, não há necessidade de descartar nenhum item.
+
+# 2) Itens com valores maiores para o coeficiente de correlação ponto-bisserial tendem a apresentar maiores valores também para o coeficiente de correlação bisserial? Apresente um diagrama de dispersão com os valores dos dois coeficientes para os 14 itens.
+
+```{r dois, include=T, echo=F, warning=F, message=F,cache=T}
+df <- data.frame(bisserial=altura.desc[["bisCorr"]],ponto.bisserial=altura.desc[["ExBisCorr"]])
+ggplot(df,aes(x=bisserial,y=ponto.bisserial)) +
+  geom_point() + geom_smooth(method="lm") +
+  labs(x="Bisserial",y="Ponto-bisserial") + theme_estat()
+```
+
+Nota-se que existe correlação quase absoluta entre os coeficientes bisserial e ponto-bisserial. Portanto, itens com valores maiores para o coeficiente de correlação ponto-bisserial tendem a apresentar maiores valores também para o coeficiente de correlação bisserial.
+
+# 3) Uma alternativa para o escore total como medida de proficiência (altura, neste caso) seria o escore padronizado:
+
+$$Z_j = (T_j - \bar{T})/S_T, j=1,...,n$$
+
+A partir dos valores do escore padronizado, obtenha uma estimativa da altura de cada indivíduo com a mesma média e desvio-padrão das alturas reais, isto é, $$Hj = \mu + \sigma Z_j,j = 1, . . . , n$$, sendo $\mu$ a altura média real e $\sigma$ o desvio-padrão da alturas reais.
+
+Calcule a correlação entre as alturas reais e estimadas.
+
+Elabore um diagrama de dispersão com as alturas reais e estimadas.
+
+```{r tres,echo=F,cache=T}
+
+altura %>%
+  dplyr::select(-c(1,2)) %>%
+  mutate(media_linha=rowMeans(.)) %>%
+  mutate(media_linha=media_linha-mean(media_linha)) %>%
+  mutate(desvio_linha=sqrt(rowSums((. - media_linha)^2)/14)) %>%
+  mutate(Z_j=(media_linha)/desvio_linha) %>%
+  mutate(H_j=mean(altura$altura)+sd(altura$altura)*Z_j) %>%
+  mutate(H_j=round(H_j,2)) %>%
+  mutate(altura=altura$altura) %>%
+  dplyr::select(altura,H_j) %>%
+  ggplot(aes(x=altura,y=H_j)) +
+  geom_point() + geom_smooth(method="lm") +
+  labs(x="Altura real",y="Altura estimada",title="Correlação=0.752") +
+  theme_estat()
+
+```
+
+Notamos que foi possível estimar as alturas com uma precisão decente, obtendo uma correlação de 0.752 entre as alturas reais e estimadas. 
+
+# 4) Com base no coeficiente alpha de Cronbach, a consistência interna do questionário é satisfatória?
+
+```{r quatro,echo=F}
+kable(altura.desc[["alpha"]])
+```
+
+Notamos que tanto para o questionário completo quanto avaliado item a item, o coeficiente $\alpha$ de Cronbach apresenta excelentes valores, indicando que os itens discriminam bem e não são redundantes. Portanto, a consistência interna do questionário é satisfatória.
+
+# 5) Quais os itens com o menor e o maior índice de dificuldade?
+
+```{r cinco,echo=F}
+kable(altura.desc[["perc"]])
+```
+
+Pela proporção das respostas, nota-se que os itens mais "difíceis", em ordem, são: Item 8; Item5 e Item 6. Por outro lado, os três itens mais "fáceis" são, em ordem: Item 9; Item 7 e Item 10.
+
+6) Quais itens apresentam maior índice de discriminação entre indivíduos altos e baixos?
+
+```{r seis,echo=F}
+# include the ID and the bisserial correlation
+bisserial <- altura.desc[["bisCorr"]]
+id <- 1:14
+bisserial <- as.data.frame(cbind(id,bisserial)) # sort the df by the bisserial value
+bisserial <- bisserial[order(-bisserial$bisserial),]
+
+kable(bisserial)
+
+```
+Ordenando os valores do coeficiente ponto-bisserial, concluímos que os itens que apresentam maior índice de discriminação entre indivíduos altos e baixos são, em ordem: Item 14; 10 e 7.
