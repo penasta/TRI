@@ -1,0 +1,251 @@
+---
+title: ''
+author: ''
+date: ''
+output:
+  pdf_document: null
+  fig_crop: no
+  html_document:
+    df_print: paged
+subtitle: ''
+highlight: tango
+number_sections: no
+fig_caption: yes
+keep_tex: yes
+includes:
+  in_header: Estilo.sty
+classoption: a4paper
+always_allow_html: yes
+---
+  
+  
+\begin{center}
+{\Large
+  DEPARTAMENTO DE ESTATÍSTICA} \\
+\vspace{0.5cm}
+\begin{figure}[!t]
+\centering
+\includegraphics[width=9cm, keepaspectratio]{logo-UnB.eps}
+\end{figure}
+\vskip 1em
+{\large
+  `r format(Sys.time(), '%d %B %Y')`}
+\vskip 3em
+{\LARGE
+  \textbf{Lista 2}} \\
+\vskip 5em
+{\Large
+  Prof. Dr. Antônio Eduardo Gomes} \\
+\vskip 1em
+{\Large
+  Aluno: Bruno Gondim Toledo} \\
+\vskip 1em
+{\Large
+  Matrícula: 15/0167636} \\
+\vskip 1em
+{\Large
+  Teoria de Resposta ao Item} \\
+\vskip 1em
+{\Large
+  2º/2023} \\
+\vskip 1em
+\vskip 1em
+\end{center}
+
+\newpage
+
+```{r setup, include=F}
+source("source/packages.R")
+p_load(knitr,ggplot2,reshape2,gridExtra)
+```
+
+```{r dados, echo=F, cache=T}
+mat.par.1 <- matrix(c(1.8, .7, 1.8, 1.2, 1.2, .5, 1, 1, 1, -.5, .5, 0, 0.2, 0.2, .25, .2, 0.25, .25),nrow=6)
+mat.par.2 <- matrix(c(2, .5, 1.5, 1.3, 1.1, .7, -1, 1, -1.5, .5, 1.5, 2, 0.2, 0.2, .25, .2, 0.25, .25),nrow=6)
+
+theta <- seq(-4,4,0.01)
+
+# Questão 1
+
+mat.prob <- matrix(0,nrow(mat.par.1),length(theta))
+```
+
+# 1) Na tabela abaixo, estão apresentados os parâmetros dos itens para dois testes distintos, cada um com 6 itens.
+
+## a) Construa um gráfico para cada teste com as curvas características dos itens (CCI).
+
+### a1)
+
+```{r umaum, echo=F, cache=T}
+for (i in 1:nrow(mat.par.1)) {
+  for (j in 1:length(theta))
+    mat.prob[i,j] <- mat.par.1[i,3] + (1-mat.par.1[i,3])/(1+exp(-mat.par.1[i,1]*(theta[j]-mat.par.1[i,2])))
+}
+
+df1 <- data.frame(theta = theta, prob = mat.prob[1,], item = "Item 1")
+df2 <- data.frame(theta = theta, prob = mat.prob[2,], item = "Item 2")
+df3 <- data.frame(theta = theta, prob = mat.prob[3,], item = "Item 3")
+df4 <- data.frame(theta = theta, prob = mat.prob[4,], item = "Item 4")
+df5 <- data.frame(theta = theta, prob = mat.prob[5,], item = "Item 5")
+df6 <- data.frame(theta = theta, prob = mat.prob[6,], item = "Item 6")
+
+df <- rbind(df1, df2, df3, df4, df5, df6)
+
+ggplot(df, aes(x = theta, y = prob, color = item)) +
+  geom_line() +
+  ylim(0, 1) +
+  labs(title = "Teste 1",
+       x = "Proeficiência",
+       y = "Probabilidade") +
+  theme_minimal() +
+  scale_color_manual(values = c("Item 1" = "blue", "Item 2" = "red", "Item 3" = "green",
+                                "Item 4" = "purple", "Item 5" = "orange", "Item 6" = "pink")) +
+  theme(legend.position = "top")
+
+```
+
+### a2)
+
+```{r umadois, echo=F, cache=T}
+for (i in 1:nrow(mat.par.2)) {
+  for (j in 1:length(theta))
+    mat.prob[i,j] <- mat.par.2[i,3] + (1-mat.par.2[i,3])/(1+exp(-mat.par.2[i,1]*(theta[j]-mat.par.2[i,2])))
+}
+
+df1 <- data.frame(theta = theta, prob = mat.prob[1,], item = "Item 1")
+df2 <- data.frame(theta = theta, prob = mat.prob[2,], item = "Item 2")
+df3 <- data.frame(theta = theta, prob = mat.prob[3,], item = "Item 3")
+df4 <- data.frame(theta = theta, prob = mat.prob[4,], item = "Item 4")
+df5 <- data.frame(theta = theta, prob = mat.prob[5,], item = "Item 5")
+df6 <- data.frame(theta = theta, prob = mat.prob[6,], item = "Item 6")
+
+df <- rbind(df1, df2, df3, df4, df5, df6)
+
+ggplot(df, aes(x = theta, y = prob, color = item)) +
+  geom_line() +
+  ylim(0, 1) +
+  labs(title = "Teste 2",
+       x = "Proeficiência",
+       y = "Probabilidade") +
+  theme_minimal() +
+  scale_color_manual(values = c("Item 1" = "blue", "Item 2" = "red", "Item 3" = "green",
+                                "Item 4" = "purple", "Item 5" = "orange", "Item 6" = "pink")) +
+  theme(legend.position = "top")
+
+```
+
+## b) Qual o item mais fácil de cada teste? Justifique sua resposta.
+
+Analisando a CCI de cada item, notamos que para o item 1, o ítem com maior probabilidade de acerto para $\theta \in (-4,-1)$ é o item 6. Entretando, para $\theta > -1$, nota-se que o item 4 se torna o com maior probabilidade de acerto. Portanto, para proeficiências $\theta$ muito baixas, o item 6 aparenta ser mais fácil, talvez por facilidade de acerto ao acaso. Entretanto, para proeficiências não tão baixas, o item 4 se torna mais fácil, pois a probabilidade de acerto aumenta mais rapidamente que a do item 6.
+
+Já para o item 2, nota-se que o item 3 é o mais fácil para qualquer $\theta$, atingindo valores próximos a 0,9 para $\theta < 0$. Portanto, provavelmente se trata de um item que não discrimina bem entre as proeficiências.
+
+## c) Qual o item que menos discrimina em cada teste? Justifique sua resposta.
+
+Analisando a CCI de cada item, notamos que para o item 1, o item que pior discrimina entre as proeficiencias $\theta$ é justamente o item 6, visto que sua curva de densidade acumulada não forma um pico característico próximo a algum $\theta$ de interesse, aumentando lentamente e constantemente a probabilidade de acerto. Portanto, não discrimina bem entre as diversas proeficiências. Já para o teste 2, podemos citar dois itens. Primeiramente, o item 3 pela facilidade de acerto, que talvez leve a não discriminar bem entre altas e médias-baixas proeficiências. Entretando o item que apresenta a menor evolução de densidade acumulada é o item 2, tornando-se assim o item que menos discrimina entre as proeficiências para o teste 2.
+
+## d) Qual o item em cada teste para o qual um indivíduo com proficiência igual a 0 tem a maior probabilidade de acerto ?
+
+```{r umd, echo=F, cache=T}
+vec.prob.1 <- mat.par.1[,3] + (1-mat.par.1[,3])/(1+exp(-mat.par.1[,1]*(0-mat.par.1[,2])))
+#vec.prob.1 
+vec.prob.2 <- mat.par.2[,3] + (1-mat.par.2[,3])/(1+exp(-mat.par.2[,1]*(0-mat.par.2[,2])))
+#vec.prob.2 
+```
+
+Para o teste 1, o indivíduo  teria maior probabilidade de acerto no item `r which.max(vec.prob.1)`, com probabilidade de acerto `r round(max(vec.prob.1),2)`. Já para o teste 2, o indivíduo  teria maior probabilidade de acerto no item `r which.max(vec.prob.2)`, com probabilidade de acerto `r round(max(vec.prob.2),2)`.
+
+# 2 Elabore um único gráfico com a função de informação (FIT) de cada um dos dois testes.
+
+```{r dois, echo=F, cache=T}
+
+mat.prob <- mat.prob.dif <- mat.info <- matrix(0,nrow(mat.par.1),length(theta))
+
+for (i in 1:nrow(mat.par.1)) {
+  for (j in 1:length(theta)) {
+    mat.prob[i,j] <- mat.par.1[i,3] + (1-mat.par.1[i,3])/(1+exp(-mat.par.1[i,1]*(theta[j]-mat.par.1[i,2])))
+    mat.prob.dif[i,j] <- mat.par.1[i,1]*(1-mat.par.1[i,3])*exp(-mat.par.1[i,1]*(theta[j]-mat.par.1[i,2]))/
+      ((1+exp(-mat.par.1[i,1]*(theta[j]-mat.par.1[i,2])))^2)
+    mat.info[i,j] <- (mat.prob.dif[i,j]^2)/(mat.prob[i,j]*(1-mat.prob[i,j]))
+  }
+}
+
+info.1 <- apply(mat.info,2,sum)
+
+for (i in 1:nrow(mat.par.2)) {
+  for (j in 1:length(theta)) {
+    mat.prob[i,j] <- mat.par.2[i,3] + (1-mat.par.2[i,3])/(1+exp(-mat.par.2[i,1]*(theta[j]-mat.par.2[i,2])))
+    mat.prob.dif[i,j] <- mat.par.2[i,1]*(1-mat.par.2[i,3])*exp(-mat.par.2[i,1]*(theta[j]-mat.par.2[i,2]))/
+      ((1+exp(-mat.par.2[i,1]*(theta[j]-mat.par.2[i,2])))^2)
+    mat.info[i,j] <- (mat.prob.dif[i,j]^2)/(mat.prob[i,j]*(1-mat.prob[i,j]))
+  }
+}
+
+info.2 <- apply(mat.info,2,sum)
+
+df_info <- data.frame(theta = theta, info1 = info.1, info2 = info.2)
+
+ggplot(df_info, aes(x = theta)) +
+  geom_line(aes(y = info1, color = "Teste 1"), linetype = "solid") +
+  geom_line(aes(y = info2, color = "Teste 2"), linetype = "dashed") +
+  labs(title = "Função de Informação do Teste (FIT)", x = "Proeficiência", y = "Informação") +
+  scale_color_manual(values = c("Teste 1" = "blue", "Teste 2" = "red")) +
+  theme_minimal() +
+  theme(legend.position = "top") +
+  guides(color = guide_legend(title = "Testes", override.aes = list(linetype = c("solid", "dashed"))))
+```
+
+# 3) Com base nos gráficos das FIT’s, qual dos testes você escolheria para estimar as proficiências no intervalo [0, 2]. Justitique sua resposta.
+
+Baseando-se na FIT, notamos que o teste 1 discrimina melhor as proeficiências no intervalo [0, 2], visto que atinge o pico da informação aproximadamente no meio do intervalo, estando as pontas do intervalo já em partes mais pesadas da cauda da distribuição. Já para o teste 2, a informação não é tão bem discriminada neste intervalo. Portanto, escolheria o teste 1 para estimar as proeficiências no intervalo [0, 2].
+
+\newpage
+
+# 4) Considerando os níveis de proeficiências -1 e 1, existe algum item âncora para o nível 1. Considere os dois testes.
+
+Lembrando a definição de ítem âncora:
+
+$$\begin{cases}
+a) P(X=1|\theta = Z) \ge 0,65 \\
+b) P(X=1|\theta = Y) < 0,50 \\
+c) P(X=1|\theta = Z) - P(X=1|\theta = Y) \ge 0,30
+\end{cases}$$
+
+Portanto, calculando estas probabilidades para cada item e teste, observamos:
+
+```{r quatro, echo=F, cache=T}
+results_1 <- data.frame(Item = 1:6, p.Z = numeric(6), p.Y = numeric(6), p.diff = numeric(6))
+results_2 <- data.frame(Item = 1:6, p.Z = numeric(6), p.Y = numeric(6), p.diff = numeric(6))
+
+theta.Z <- 1
+theta.Y <- -1
+
+for (i in 1:6) {
+  p.Z <- mat.par.1[i, 3] + (1 - mat.par.1[i, 3]) / (1 + exp(-mat.par.1[i, 1] * (theta.Z - mat.par.1[i, 2])))
+  p.Y <- mat.par.1[i, 3] + (1 - mat.par.1[i, 3]) / (1 + exp(-mat.par.1[i, 1] * (theta.Y - mat.par.1[i, 2])))
+  p.diff <- p.Z - p.Y
+  results_1[i, ] <- c(i, p.Z, p.Y, p.diff)
+}
+
+for (i in 1:6) {
+  p.Z <- mat.par.2[i, 3] + (1 - mat.par.2[i, 3]) / (1 + exp(-mat.par.2[i, 1] * (theta.Z - mat.par.2[i, 2])))
+  p.Y <- mat.par.2[i, 3] + (1 - mat.par.2[i, 3]) / (1 + exp(-mat.par.2[i, 1] * (theta.Y - mat.par.2[i, 2])))
+  p.diff <- p.Z - p.Y
+  results_2[i, ] <- c(i, p.Z, p.Y, p.diff)
+}
+
+```
+
+## Teste 1
+
+```{r tum, echo=F, cache=T}
+kable(results_1)
+```
+
+## Teste 2
+
+```{r tdois, echo=F, cache=T}
+kable(results_2)
+```
+
+Portanto,para o teste 1, notamos que os itens que podem ser considerados âncoras seriam os itens 4 e 5, atendendo todos os critérios da definição. Já para o teste dois, os ítens que poderiam ser considerados âncoras seria apenas o item 4.
