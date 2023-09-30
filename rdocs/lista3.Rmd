@@ -159,3 +159,20 @@ ggplot(info_teste, aes(x = Proficiencia, y = Informacao)) +
 
 Observando o gráfico, notamos que a função de informação do teste apresenta cauda mais alongada a direita, com pico próximo à proficiência zero. Podemos postular que este teste discrimine bem pessoas baixas de pessoas altas, bem como sirva para estimar pessoas de baixa estatura, enquanto por apresentar cauda mais suave a direita, talvez não discrimine tão bem pessoas altas de pessoas muito altas. Este é um resultado interessante, pois pelo que foi discutido em sala de aula, este teste aparentava ser mais preciso na discriminação de pessoas altas de pessoas muito altas, e não o contrário.
 
+# 6) As alturas estimadas via modelo logístico de dois parâmetros estão na escala (0,1), i.e., com média 0 e desvio-padrão 1. Converta as alturas estimadas para a escala com média e desvio-padrão iguais à altura média e desvio-padrão reais, respectivamente.
+
+```{r q6, echo=T, message=F, warning=F, cache=TRUE}
+
+```
+
+# 7) Compare graficamente (e através do coeficiente de correlação) as alturas reais e as alturas estimadas.
+
+```{r q7, echo=T, message=F, warning=F, cache=TRUE}
+
+```
+
+# 8) Calcule o escore padronizado e converta as alturas estimadas para a escala com média e desvio-padrão iguais à altura média e desvio-padrão reais, respectivamente (isto já foi feito na primeira lista de exercícios). Compare graficamente (e através do coeficiente de correlação) as alturas estimadas via escore padronizado transformado e via ajuste do modelo logístico de dois parâmetros.
+
+```{r q8, echo=T, message=F, warning=F, cache=TRUE}
+
+```
