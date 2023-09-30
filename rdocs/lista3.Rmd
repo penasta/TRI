@@ -1,0 +1,161 @@
+---
+title: ''
+author: ''
+date: ''
+output:
+  pdf_document: null
+  fig_crop: no
+  html_document:
+    df_print: paged
+subtitle: ''
+highlight: tango
+number_sections: no
+fig_caption: yes
+keep_tex: yes
+includes:
+  in_header: Estilo.sty
+classoption: a4paper
+always_allow_html: yes
+---
+  
+  
+\begin{center}
+{\Large
+  DEPARTAMENTO DE ESTATÍSTICA} \\
+\vspace{0.5cm}
+\begin{figure}[!t]
+\centering
+\includegraphics[width=9cm, keepaspectratio]{logo-UnB.eps}
+\end{figure}
+\vskip 1em
+{\large
+  `r format(Sys.time(), '%d %B %Y')`}
+\vskip 3em
+{\LARGE
+  \textbf{Lista 3}} \\
+\vskip 5em
+{\Large
+  Prof. Dr. Antônio Eduardo Gomes} \\
+\vskip 1em
+{\Large
+  Aluno: Bruno Gondim Toledo} \\
+\vskip 1em
+{\Large
+  Matrícula: 15/0167636} \\
+\vskip 1em
+{\Large
+  Teoria de Resposta ao Item} \\
+\vskip 1em
+{\Large
+  2º/2023} \\
+\vskip 1em
+\vskip 1em
+\end{center}
+
+\newpage
+
+```{r setup, include=F}
+
+source("source/packages.R")
+p_load(irtoys,ltm,mirt,knitr)
+seed <- 150167636
+
+altura <- read.fwf(file="aprender3.unb.br_pluginfile.php_2689255_mod_resource_content_1_altura211.txt",
+widths=c(3,4,1,1,1,1,1,1,1,1,1,1,1,1,1,1),dec=',')
+colnames(altura) <- c("id","altura",paste(c("i"),1:14,sep=""))
+
+```
+
+# 1) Ajuste o modelo logístico de dois parâmetros aos dados
+
+```{r q1, echo=T, message=F, warning=F, cache=TRUE}
+
+no.item <- ncol(altura[,3:16])
+altura.tpm <- tpm(altura[,3:16],constraint=cbind(1:no.item,1,0))
+par.est <- coef(altura.tpm)
+
+```
+
+# 2) Construa um gráfico com as curvas características dos 14 itens.
+
+```{r q2, echo=F, message=F, warning=F, cache=TRUE}
+
+prof.est <- eap(altura[,3:16], cbind(par.est[,3],par.est[,2],par.est[,1]), qu=normal.qu())
+theta.vec <- sort(prof.est[,1])
+
+results <- data.frame(Proficiencia = theta.vec)
+for (i in 1:no.item) {
+  prob <- 1 / (1 + exp(-par.est[i, 3] * (theta.vec - par.est[i, 2])))
+  results[paste("Item", i)] <- prob
+}
+results_long <- pivot_longer(results, cols = -Proficiencia, names_to = "Item", values_to = "Probabilidade")
+
+ggplot(results_long, aes(x = Proficiencia, y = Probabilidade, color = Item)) +
+  geom_line() +
+  labs(
+    x = "Proficiência",
+    y = "Probabilidade de resposta positiva",
+    title = "Curva Característica do Item (CCI) para Itens",
+    color = "Item"
+  ) +
+  theme_minimal()
+
+```
+
+# 3) Calcule as funções de informação dos itens e construa um gráfico com estas funções.
+
+```{r q3, echo=F, message=F, warning=F, cache=TRUE}
+
+mat.prob <- mat.prob.dif <- mat.info <- matrix(0,no.item,length(theta.vec))
+
+for (i in 1:no.item) {
+  for (j in 1:length(theta.vec)) {
+    mat.prob[i,j] <- par.est[i,1] + (1-par.est[i,1])/(1+exp(-par.est[i,3]*(theta.vec[j]-par.est[i,2])))
+    mat.prob.dif[i,j] <- par.est[i,3]*(1-par.est[i,1])*exp(-par.est[i,3]*(theta.vec[j]-par.est[i,2]))/
+      ((1+exp(-par.est[i,3]*(theta.vec[j]-par.est[i,2])))^2)
+    mat.info[i,j] <- (mat.prob.dif[i,j]^2)/(mat.prob[i,j]*(1-mat.prob[i,j]))
+  }
+}
+
+info_data <- data.frame(Proficiencia = theta.vec)
+for (i in 1:no.item) {
+  info_data[paste("Item", i)] <- mat.info[i, ]
+}
+
+info_data_long <- pivot_longer(info_data, cols = -Proficiencia, names_to = "Item", values_to = "Informacao")
+
+ggplot(info_data_long, aes(x = Proficiencia, y = Informacao, color = Item)) +
+  geom_line() +
+  labs(
+    x = "Proficiência",
+    y = "Informação",
+    title = "Funções de Informação dos Itens",
+    color = "Item"
+  ) +
+  theme_minimal()
+
+```
+
+# 4) Quais itens são mais adequados para a estimação da altura de pessoas baixas?
+
+Observando o gráfico acima, nota-se que o item 7 carrega a maior informação, além de ser o item com melhor discriminação entre proficiências. É, sem dúvidas, o melhor item para a estimação da altura de pessoas baixas. Além dele, os items 10 e 12 também apresentam boa carga de informação, além de alta discriminação entre proficiências. Portanto, estes são os itens mais adequados para a estimação da altura de pessoas baixas.
+
+# 5) Calcule e esboce em um gráfico a função de informação do teste. Este teste é adequado para a estimação de pessoas com baixa estatura?
+
+```{r q5, echo=F, message=F, warning=F, cache=TRUE}
+
+info_teste <- data.frame(Proficiencia = theta.vec, Informacao = apply(mat.info, 2, sum))
+
+ggplot(info_teste, aes(x = Proficiencia, y = Informacao)) +
+  geom_line() +
+  labs(
+    x = "Proficiência",
+    y = "Informação",
+    title = "Função de Informação do Teste"
+  ) +
+  theme_minimal()
+
+```
+
+Observando o gráfico, notamos que a função de informação do teste apresenta cauda mais alongada a direita, com pico próximo à proficiência zero. Podemos postular que este teste discrimine bem pessoas baixas de pessoas altas, bem como sirva para estimar pessoas de baixa estatura, enquanto por apresentar cauda mais suave a direita, talvez não discrimine tão bem pessoas altas de pessoas muito altas. Este é um resultado interessante, pois pelo que foi discutido em sala de aula, este teste aparentava ser mais preciso na discriminação de pessoas altas de pessoas muito altas, e não o contrário.
+
