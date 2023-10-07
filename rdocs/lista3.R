@@ -109,7 +109,27 @@ theta.est.tct <- mean(altura[,2]) + sd(altura[,2])*escore.padr
 plot(theta.est.tct,theta.est,xlab=c("Altura estimada via TCT"),ylab=c("Altura estimada via TRI"))
 abline(0,1)
 
+ggplot(data.frame(theta.est.tct, theta.est), aes(x = theta.est.tct, y = theta.est)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1) +
+  labs(
+    x = "Altura estimada via TCT",
+    y = "Altura estimada via TRI",
+    title = "Comparacao entre as estimativas de altura via TCT e TRI"
+  ) +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_minimal()
+
 cor(theta.est.tct,theta.est)
 
 boxplot(cbind(theta.est.tct,theta.est))
 
+theta_est_tct_long <- pivot_longer(data.frame(theta.est.tct, theta.est), cols = c("theta.est.tct", "theta.est"), names_to = "Metodo", values_to = "Altura")
+ggplot(theta_est_tct_long, aes(x = Metodo, y = Altura)) +
+  geom_boxplot() +
+  labs(
+    x = "Metodo",
+    y = "Altura",
+    title = "Comparacao entre as estimativas de altura via TCT e TRI"
+  ) +
+  theme_minimal()

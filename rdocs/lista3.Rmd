@@ -57,7 +57,7 @@ always_allow_html: yes
 ```{r setup, include=F}
 
 source("source/packages.R")
-p_load(irtoys,ltm,mirt,knitr)
+p_load(irtoys,ltm,mirt,knitr,gridExtra)
 seed <- 150167636
 
 altura <- read.fwf(file="aprender3.unb.br_pluginfile.php_2689255_mod_resource_content_1_altura211.txt",
@@ -161,18 +161,95 @@ Observando o gráfico, notamos que a função de informação do teste apresenta
 
 # 6) As alturas estimadas via modelo logístico de dois parâmetros estão na escala (0,1), i.e., com média 0 e desvio-padrão 1. Converta as alturas estimadas para a escala com média e desvio-padrão iguais à altura média e desvio-padrão reais, respectivamente.
 
-```{r q6, echo=T, message=F, warning=F, cache=TRUE}
+```{r q6, echo=F, message=F, warning=F, cache=TRUE}
+theta.est.eap <- eap(altura[3:16], cbind(par.est[,3],par.est[,2],par.est[,1]), qu=normal.qu())
+theta.est <- mean(altura[,2]) + sd(altura[,2])*theta.est.eap[,1]
+
+# histograma de theta.est, com kernel
+p1 <- ggplot(data.frame(theta.est), aes(x = theta.est)) +
+  geom_histogram(aes(y = ..density..), bins = 20, color = "black", fill = "white") +
+  geom_density(alpha = 0.2, fill = "blue") +
+  labs(
+    x = "Altura",
+    y = "Densidade",
+    title = "Alturas Estimadas"
+  ) +
+  theme_minimal()
+
+p2 <- ggplot(data.frame(altura$altura), aes(x = altura$altur)) +
+  geom_histogram(aes(y = ..density..), bins = 20, color = "black", fill = "white") +
+  geom_density(alpha = 0.2, fill = "blue") +
+  labs(
+    x = "Altura",
+    y = "Densidade",
+    title = "Alturas reais"
+  ) +
+  theme_minimal()
+
+grid.arrange(p1, p2, nrow=2)
 
 ```
 
 # 7) Compare graficamente (e através do coeficiente de correlação) as alturas reais e as alturas estimadas.
 
-```{r q7, echo=T, message=F, warning=F, cache=TRUE}
+```{r q7, echo=F, message=F, warning=F, cache=TRUE}
+cor <- cor(altura[,2],theta.est)
+```
+
+Observamos os histogramas das alturas estimadas pelas alturas reais no gráfico anterior, juntamente com a linha de *kernel* da distribuição amostral. O coeficiente de corelação de Pearson calculado para as alturas estimadas e as alturas reais é de `r round(cor,3)`, o que indica uma correlação positiva entre as alturas estimadas e as alturas reais.
+
+```{r q72, echo=F, message=F, warning=F, cache=TRUE}
+
+ggplot(data.frame(altura$altura, theta.est), aes(x = altura$altur, y = theta.est)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1) +
+  geom_smooth(method = "lm", colour = cores_estat[2], se = F) +
+  geom_smooth(
+    method = "loess",
+    colour = cores_estat[1],se = T) +
+  labs(
+    x = "Altura Real",
+    y = "Altura Estimada",
+    title = "Alturas Reais x Alturas Estimadas"
+  ) +
+  theme_minimal()
 
 ```
+Aqui, testando métodos regressivos, notamos que a regressão linear simples aparenta se ajustar suficientemente bem aos dados, com a Regressão polinomial local (LOESS) apenas diferindo um pouco nos extremos dos dados.
+
+E, por fim, a simples linha diagonal indo de 0 a 1 não difere muito da linha de mínimos quadrados, indicando uma correlação positiva muito forte entre as alturas estimadas e as alturas reais.
+
 
 # 8) Calcule o escore padronizado e converta as alturas estimadas para a escala com média e desvio-padrão iguais à altura média e desvio-padrão reais, respectivamente (isto já foi feito na primeira lista de exercícios). Compare graficamente (e através do coeficiente de correlação) as alturas estimadas via escore padronizado transformado e via ajuste do modelo logístico de dois parâmetros.
 
-```{r q8, echo=T, message=F, warning=F, cache=TRUE}
+```{r q8, echo=F, message=F, warning=F, cache=TRUE}
+escore <- apply(altura[,3:16],1,sum)
+escore.padr <- (escore-mean(escore))/sd(escore)
+theta.est.tct <- mean(altura[,2]) + sd(altura[,2])*escore.padr
+
+ggplot(data.frame(theta.est.tct, theta.est), aes(x = theta.est.tct, y = theta.est)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1) +
+  labs(
+    x = "Altura estimada via TCT",
+    y = "Altura estimada via TRI",
+    title = "Comparacao entre as estimativas de altura via TCT e TRI"
+  ) +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_minimal()
+
+cor2 <- cor(theta.est.tct,theta.est)
+
+theta_est_tct_long <- pivot_longer(data.frame(theta.est.tct, theta.est), cols = c("theta.est.tct", "theta.est"), names_to = "Metodo", values_to = "Altura")
+ggplot(theta_est_tct_long, aes(x = Metodo, y = Altura)) +
+  geom_boxplot() +
+  labs(
+    x = "Metodo",
+    y = "Altura",
+    title = "Comparacao entre as estimativas de altura via TCT e TRI"
+  ) +
+  theme_minimal()
 
 ```
+
+Analisando graficamente, e também com o coeficiente de correlação = `r round(cor2,3)`, percebemos que as estimativas via TRI e via TCT não diferem muito, e que ambas são muito próximas das alturas reais. Este era um resultado esperado, visto que tínhamos os valores reais, bem como o fato de utilizamos a TRI sob um modelo de dois parâmetros, quando esta se destaca quando é necessário utilizar o de três parâmetros, ou seja, o acerto ao acaso, situação esta que não ocorre para este conjunto de dados. Se, por um lado, a TRI aparenta ser uma ferramenta poderosa demais para lidar com um problema simples como este, que poderia ser resolvido pela TCT ou simplesmente usando uma régua, ao menos o exemplo lúdico serve para confirmar que a TRI é eficiente, útil e precisa para situações em que a TCT ou uma ferramenta física de medida não pode ser utilizada, que é o caso quando trabalhamos com a estimação de características latentes.
