@@ -1,5 +1,5 @@
 source("rdocs/source/packages.r")
-p_load(irtoys,mirt)
+p_load(irtoys,mirt,ggplot2)
 
 ### Estimativas reais dos parametros dos itens utilizadas para simular os dados
 #         a      b1    b2    b3
@@ -45,18 +45,32 @@ i <- 4
 
 ### Curvas das probabilidades de cada categoria ou superior, P*_{ik}(theta), para cada item
 
-plot(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i]))),type="l",ylab=c("Prob. da categoria ou superior"),
-     xlab=c("theta"),main=c("Item ",i))
-lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i]))))
-lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))))
+# plot(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i]))),type="l",ylab=c("Prob. da categoria ou superior"),
+#      xlab=c("theta"),main=c("Item ",i))
+# lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i]))))
+# lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))))
+
+ggplot(data.frame(theta=theta), aes(x=theta)) +
+  stat_function(fun=function(x) 1/(1+exp(-a.par[i]*(x-b1.par[i]))), geom="line") +
+  stat_function(fun=function(x) 1/(1+exp(-a.par[i]*(x-b2.par[i]))), geom="line") +
+  stat_function(fun=function(x) 1/(1+exp(-a.par[i]*(x-b3.par[i]))), geom="line") +
+  xlab("theta") + ylab("Prob. da categoria ou superior") + ggtitle(paste("Item ", i))
 
 ### Curvas das probabilidades das categorias para cada item
 
-plot(sort(theta),1-1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i]))),type="l",ylab=c("Prob. das categorias"),
-     xlab=c("theta"),main=c("Item ",i))
-lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i])))-1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i]))))
-lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i])))-1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))))
-lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))))
+# plot(sort(theta),1-1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i]))),type="l",ylab=c("Prob. das categorias"),
+#      xlab=c("theta"),main=c("Item ",i))
+# lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i])))-1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i]))))
+# lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i])))-1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))))
+# lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))))
+
+ggplot(data.frame(theta=theta), aes(x=theta)) +
+  stat_function(fun=function(x) 1-1/(1+exp(-a.par[i]*(x-b1.par[i]))), geom="line") +
+  stat_function(fun=function(x) 1/(1+exp(-a.par[i]*(x-b1.par[i])))-1/(1+exp(-a.par[i]*(x-b2.par[i]))), geom="line") +
+  stat_function(fun=function(x) 1/(1+exp(-a.par[i]*(x-b2.par[i])))-1/(1+exp(-a.par[i]*(x-b3.par[i]))), geom="line") +
+  stat_function(fun=function(x) 1/(1+exp(-a.par[i]*(x-b3.par[i]))), geom="line") +
+  xlab("theta") + ylab("Prob. das categorias") + ggtitle(paste("Item ", i))
+
 
 
 ### geracao das respostas
@@ -71,10 +85,10 @@ for (j in 1:nr) {
   for (i in 1:n.itens)
     resp[j,i] <- sample(4,1,replace=F,mat.prob[i,])
 }
-
+head(resp,10)
 ### ajuste do modelo de resposta gradual via "mirt" utilizando as respostas simuladas
 
-write(t(resp),file="banco/dados.mrg.txt",ncol=n.itens)
+#write(t(resp),file="banco/dados.mrg.txt",ncol=n.itens)
 resp <- read.table(file="banco/dados.mrg.txt")
 
 mrg <- mirt(resp,1,itemtype=c('graded'))
@@ -97,21 +111,57 @@ mat.par.est[7,] <- par.est$V7
 mat.par.est[8,] <- par.est$V8
 mat.par.est[9,] <- par.est$V9
 
-plot(a.par,mat.par.est[,1],xlab=c("a"),ylab=c("a estimado"))
-abline(0,1)
+# now plot this matrix in a ggplot2 graphic:
 
-plot(b1.par,mat.par.est[,2],xlab=c("b1"),ylab=c("b1 estimado"))
-abline(0,1)
+df = data.frame(theta=theta, prof_est=prof.est)
+df |> ggplot(aes(x=theta, y=F1)) +
+  geom_point() +
+  geom_abline(intercept=0, slope=1) +
+  xlab("theta") + ylab("theta estimado")
 
-plot(b2.par,mat.par.est[,3],xlab=c("b2"),ylab=c("b2 estimado"))
-abline(0,1)
+# plot(a.par,mat.par.est[,1],xlab=c("a"),ylab=c("a estimado"))
+# abline(0,1)
 
-plot(b3.par,mat.par.est[,4],xlab=c("b3"),ylab=c("b3 estimado"))
-abline(0,1)
+ggplot(data.frame(a=a.par, a_est=mat.par.est[,1]), aes(x=a, y=a_est)) +
+  geom_point() +
+  geom_abline(intercept=0, slope=1) +
+  xlab("a") + ylab("a estimado")
+
+# plot(b1.par,mat.par.est[,2],xlab=c("b1"),ylab=c("b1 estimado"))
+# abline(0,1)
+
+ggplot(data.frame(b1=b1.par, b1_est=mat.par.est[,2]), aes(x=b1, y=b1_est)) +
+  geom_point() +
+  geom_abline(intercept=0, slope=1) +
+  xlab("b1") + ylab("b1 estimado")
+
+# plot(b2.par,mat.par.est[,3],xlab=c("b2"),ylab=c("b2 estimado"))
+# abline(0,1)
+
+ggplot(data.frame(b2=b2.par, b2_est=mat.par.est[,3]), aes(x=b2, y=b2_est)) +
+  geom_point() +
+  geom_abline(intercept=0, slope=1) +
+  xlab("b2") + ylab("b2 estimado")
+
+# plot(b3.par,mat.par.est[,4],xlab=c("b3"),ylab=c("b3 estimado"))
+# abline(0,1)
+
+ggplot(data.frame(b3=b3.par, b3_est=mat.par.est[,4]), aes(x=b3, y=b3_est)) +
+  geom_point() +
+  geom_abline(intercept=0, slope=1) +
+  xlab("b3") + ylab("b3 estimado")
 
 ## Gr�fico das profici�ncias estimadas x profici�ncias reais
-plot(theta,prof.est)
-abline(0,1)
+# plot(theta,prof.est)
+# abline(0,1)
+
+df = data.frame(theta=theta, prof_est=prof.est)
+#write_rds(df, "banco/df.rds")
+df |> ggplot(aes(x=theta, y=F1)) +
+  geom_point() +
+  geom_abline(intercept=0, slope=1) +
+  xlab("theta") + ylab("theta estimado")
+
 
 resp[prof.est==min(prof.est),]
 
@@ -143,7 +193,7 @@ for (j in 1:nr) {
 }
 
 
-write(t(resp.sim),file="banco/dados.mrg.txt",ncol=n.it)
+#write(t(resp.sim),file="banco/dados.mrg.txt",ncol=n.it)
 resp.sim <- read.table(file="banco/dados.mrg.txt")
 
 mrg.sim <- mirt(resp.sim,1,itemtype=c('graded'))
@@ -151,8 +201,15 @@ mrg.sim <- mirt(resp.sim,1,itemtype=c('graded'))
 prof.est.sim <- fscores(mrg.sim, full.scores=TRUE)
 par.est.sim <- coef(mrg.sim,IRTpars=TRUE)
 
-plot(theta.sim,prof.est.sim)
-abline(0,1)
+# plot(theta.sim,prof.est.sim)
+# abline(0,1)
+
+df2 = data.frame(theta=theta.sim, prof_est=prof.est.sim)
+#write_rds(df2, "banco/df2.rds")
+df2 |> ggplot(aes(x=theta, y=F1)) +
+  geom_point() +
+  geom_abline(intercept=0, slope=1) +
+  xlab("theta") + ylab("theta estimado")
 
 ############################################
 ##### Modelo de Escala Gradual
@@ -177,3 +234,4 @@ par.est.gpcm <- coef(resp.gpcm)
 resp.nsm <- mirt(resp.sim,1,itemtype=c('nominal'))
 prof.est.nsm <- fscores(resp.nsm, full.scores=TRUE)
 par.est.nsm <- coef(resp.nsm)
+
