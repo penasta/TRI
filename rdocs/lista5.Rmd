@@ -1,0 +1,76 @@
+---
+title: ''
+author: ''
+date: ''
+output:
+  pdf_document: null
+  fig_crop: no
+  html_document:
+    df_print: paged
+subtitle: ''
+highlight: tango
+number_sections: no
+fig_caption: yes
+keep_tex: yes
+includes:
+  in_header: Estilo.sty
+classoption: a4paper
+always_allow_html: yes
+---
+  
+  
+\begin{center}
+{\Large
+  DEPARTAMENTO DE ESTATÍSTICA} \\
+\vspace{0.5cm}
+\begin{figure}[!t]
+\centering
+\includegraphics[width=9cm, keepaspectratio]{logo-UnB.eps}
+\end{figure}
+\vskip 1em
+{\large
+  `r format(Sys.time(), '%d %B %Y')`}
+\vskip 3em
+{\LARGE
+  \textbf{Lista 5}} \\
+\vskip 5em
+{\Large
+  Prof. Dr. Antônio Eduardo Gomes} \\
+\vskip 1em
+{\Large
+  Aluno: Bruno Gondim Toledo} \\
+\vskip 1em
+{\Large
+  Matrícula: 15/0167636} \\
+\vskip 1em
+{\Large
+  Teoria de Resposta ao Item} \\
+\vskip 1em
+{\Large
+  2º/2023} \\
+\vskip 1em
+\vskip 1em
+\end{center}
+
+\newpage
+
+```{r setup, include=F,cache=F}
+
+source("source/packages.R")
+p_load(knitr,irtoys,mirt,ggplot2)
+seed <- 150167636
+
+```
+
+1) Elabore, para cada item, um gráfico com as probabilidades de cada categoria ou uma categoria superior, $P^*_{ik}(\theta)$, e um gráfico com as curvas das probabilidades de escolha para cada uma das categorias.
+
+2) O modelo de resposta gradual foi ajustado aos dados originais (não disponíveis). Use as estimativas dos parâmetros (disponíveis no código) para gerar respostas para 1000 alunos. Use o pacote "*mirt*" do *R* para ajustar o modelo de resposta gradual às respostas geradas.
+
+3) Obtidas as novas estimativas dos parâmetros dos itens e das proficiências a partir das respostas simuladas para os 1000 respondentes, elabore um gráfico das proficiências estimadas versus proficiências verdadeiras. Analise o gráfico.
+
+4) Identifique as respostas dos alunos com proficiência estimada mínima e máxima. Na sua opinião, qual a explicação para a ocorrência de muitos empates nos valores das proficiências estimadas mínimas?
+
+5) Compare graficamente as estimativas dos parâmetros dos 9 itens obtidas a partir das respostas simuladas com aquelas fornecidas originalmente.
+
+6) Gere valores de parâmetros para 50 itens, gere as respostas para estes itens para 1000 respondentes, ajuste o modelo de resposta gradual aos dados e elabore o gráfico das proficiências estimadas versus proficiências verdadeiras. Compare este gráfico com aquele para as estimativas obtidas a partir dos 9 itens originais.
+
